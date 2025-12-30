@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import SignalForm from "../../../../../components/signals/SignalForm";
 import { formatDate, hostnameFromUrl } from "../../../../../lib/utils";
@@ -28,8 +28,6 @@ type SignalFormValue = {
   tags: string[];
   status: SignalStatus;
 };
-
-type PageProps = { params: { id: string } };
 
 const STORAGE_KEY = "signalshelf.signals.v1";
 
@@ -81,9 +79,9 @@ function removeLocal(id: string): boolean {
   return true;
 }
 
-export default function Page({ params }: PageProps) {
-  const id = decodeURIComponent(params.id);
-  const KEY = "signalshelf.signals.v1";
+export default function Page() {
+  const pathname = usePathname();
+  const id = decodeURIComponent(pathname.split("/").pop() || "");
   const router = useRouter();
   const [item, setItem] = useState<Signal | null>(null);
   const [loading, setLoading] = useState(true);
@@ -91,38 +89,18 @@ export default function Page({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [apiErrors, setApiErrors] = useState<Record<string, string>>();
-  const [debug, setDebug] = useState<{
-    origin: string;
-    id: string;
-    rawLen: number;
-    count: number;
-    found: boolean;
-  } | null>(null);
 
   useEffect(() => {
-    const origin =
-      typeof window !== "undefined" ? window.location.origin : "";
-    const raw =
-      typeof window !== "undefined" ? window.localStorage.getItem(KEY) : null;
-    let parsed: any[] = [];
-    try {
-      parsed = raw ? JSON.parse(raw) : [];
-    } catch {
-      parsed = [];
-    }
-    const foundInRaw =
-      Array.isArray(parsed) && parsed.some((signal) => signal && signal.id === id);
-    setDebug({
-      origin,
-      id,
-      rawLen: raw ? raw.length : 0,
-      count: Array.isArray(parsed) ? parsed.length : 0,
-      found: foundInRaw,
-    });
-
     setLoading(true);
     setError(null);
     setNotFound(false);
+
+    if (!id) {
+      setItem(null);
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
 
     try {
       initIfEmpty();
@@ -201,29 +179,13 @@ export default function Page({ params }: PageProps) {
     };
   }, [item]);
 
-  const debugPanel = (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-3 text-xs text-neutral-400">
-      <div>origin: {debug?.origin ?? "-"}</div>
-      <div>id: {debug?.id ?? "-"}</div>
-      <div>rawLen: {debug?.rawLen ?? "-"}</div>
-      <div>count: {debug?.count ?? "-"}</div>
-      <div>found: {String(debug?.found)}</div>
-    </div>
-  );
-
   if (loading) {
-    return (
-      <div className="space-y-6">
-        {debugPanel}
-        <p className="text-sm text-neutral-400">Loading…</p>
-      </div>
-    );
+    return <p className="text-sm text-neutral-400">Loading…</p>;
   }
 
   if (notFound) {
     return (
       <div className="space-y-6">
-        {debugPanel}
         <Link
           href="/app/inbox"
           className="text-sm text-neutral-400 transition hover:text-neutral-200"
@@ -231,7 +193,9 @@ export default function Page({ params }: PageProps) {
           Back to inbox
         </Link>
         <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-6">
-          <p className="text-sm text-neutral-400">Signal not found.</p>
+          <p className="text-sm text-neutral-400">
+            Signal not found. Check the link and try again.
+          </p>
         </div>
       </div>
     );
@@ -240,7 +204,6 @@ export default function Page({ params }: PageProps) {
   if (error) {
     return (
       <div className="space-y-6">
-        {debugPanel}
         <Link
           href="/app/inbox"
           className="text-sm text-neutral-400 transition hover:text-neutral-200"
@@ -260,10 +223,6 @@ export default function Page({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      {debugPanel}
-      {process.env.NODE_ENV !== "production" && (
-        <div className="text-xs text-neutral-500">debug: loaded {id}</div>
-      )}
       <div className="flex flex-col gap-2">
         <Link
           href="/app/inbox"
