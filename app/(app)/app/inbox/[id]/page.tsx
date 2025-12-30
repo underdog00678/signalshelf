@@ -49,12 +49,8 @@ export default function Page({ params }: PageProps) {
     try {
       initIfEmpty();
       const found = getById(id);
-      if (!found) {
-        setNotFound(true);
-        setItem(null);
-        return;
-      }
       setItem(found);
+      setNotFound(!found);
     } catch {
       setError("Unable to load the signal.");
     } finally {
@@ -75,12 +71,12 @@ export default function Page({ params }: PageProps) {
       return;
     }
 
-    const deleted = remove(item.id);
+    const deleted = remove(id);
     if (deleted) {
       router.push("/app/inbox");
-    } else {
-      setError("Unable to delete the signal.");
+      return;
     }
+    setError("Unable to delete the signal.");
   };
 
   const handleUpdate = async (value: SignalFormValue) => {
@@ -90,13 +86,13 @@ export default function Page({ params }: PageProps) {
 
     setApiErrors(undefined);
 
-    const updated = update(item.id, value);
+    const updated = update(id, value);
     if (!updated) {
       setError("Unable to save changes.");
       return;
     }
 
-    loadSignal();
+    setItem(getById(id));
     setIsEditing(false);
   };
 

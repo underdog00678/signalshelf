@@ -50,7 +50,7 @@ const normalizeTags = (tags: string[]): string[] => {
   return normalized;
 };
 
-const readSignals = (): Signal[] => {
+function read(): Signal[] {
   const storage = getStorage();
   if (!storage) {
     return [];
@@ -67,9 +67,9 @@ const readSignals = (): Signal[] => {
   } catch {
     return [];
   }
-};
+}
 
-const writeSignals = (signals: Signal[]) => {
+function write(signals: Signal[]): void {
   const storage = getStorage();
   if (!storage) {
     return;
@@ -80,7 +80,7 @@ const writeSignals = (signals: Signal[]) => {
   } catch {
     return;
   }
-};
+}
 
 const buildSeedSignals = (): Signal[] => {
   const now = Date.now();
@@ -115,14 +115,15 @@ export function initIfEmpty(): void {
     return;
   }
 
-  const current = readSignals();
+  const current = read();
   if (current.length === 0) {
-    writeSignals(buildSeedSignals());
+    write(buildSeedSignals());
   }
 }
 
 export function getAll(): Signal[] {
-  const items = [...readSignals()];
+  initIfEmpty();
+  const items = [...read()];
   items.sort((a, b) => {
     const aTime = new Date(a.createdAt).getTime();
     const bTime = new Date(b.createdAt).getTime();
@@ -132,7 +133,8 @@ export function getAll(): Signal[] {
 }
 
 export function getById(id: string): Signal | null {
-  return readSignals().find((signal) => signal.id === id) ?? null;
+  initIfEmpty();
+  return read().find((signal) => signal.id === id) ?? null;
 }
 
 export function create(input: {
@@ -159,9 +161,9 @@ export function create(input: {
     return created;
   }
 
-  const signals = readSignals();
+  const signals = read();
   signals.unshift(created);
-  writeSignals(signals);
+  write(signals);
   return created;
 }
 
@@ -174,7 +176,7 @@ export function update(
     return null;
   }
 
-  const signals = readSignals();
+  const signals = read();
   const index = signals.findIndex((signal) => signal.id === id);
   if (index === -1) {
     return null;
@@ -192,7 +194,7 @@ export function update(
   };
 
   signals[index] = updated;
-  writeSignals(signals);
+  write(signals);
   return updated;
 }
 
@@ -202,21 +204,22 @@ export function remove(id: string): boolean {
     return false;
   }
 
-  const signals = readSignals();
+  const signals = read();
   const index = signals.findIndex((signal) => signal.id === id);
   if (index === -1) {
     return false;
   }
 
   signals.splice(index, 1);
-  writeSignals(signals);
+  write(signals);
   return true;
 }
 
 export function listTags(): { name: string; count: number }[] {
+  initIfEmpty();
   const counts = new Map<string, number>();
 
-  for (const signal of readSignals()) {
+  for (const signal of read()) {
     for (const tag of signal.tags) {
       counts.set(tag, (counts.get(tag) ?? 0) + 1);
     }

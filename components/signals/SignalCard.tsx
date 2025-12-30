@@ -63,13 +63,13 @@ export default function SignalCard({ signal, onStatusChanged }: SignalCardProps)
   return (
     <div
       className="cursor-pointer rounded-xl border border-neutral-800 bg-neutral-950 p-5 transition hover:bg-neutral-900"
-      onClick={() => router.push(`/app/inbox/${signal.id}`)}
+      onClick={() => router.push(`/app/inbox/${encodeURIComponent(signal.id)}`)}
       role="button"
       tabIndex={0}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          router.push(`/app/inbox/${signal.id}`);
+          router.push(`/app/inbox/${encodeURIComponent(signal.id)}`);
         }
       }}
     >
