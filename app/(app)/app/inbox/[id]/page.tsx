@@ -33,7 +33,7 @@ type PageProps = {
 };
 
 export default function Page({ params }: PageProps) {
-  const { id } = React.use(params as any);
+  const id = decodeURIComponent(params.id);
   const router = useRouter();
   const [item, setItem] = useState<Signal | null>(null);
   const [loading, setLoading] = useState(true);
