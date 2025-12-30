@@ -173,10 +173,13 @@ export default function SignalForm({
 
       <div className="space-y-2">
         <label className="text-sm text-neutral-300">Tags</label>
+        <p className="text-xs text-neutral-500">
+          Tags: {value.tags.join(", ") || "none"}
+        </p>
         <TagPicker
           value={value.tags}
-          onChange={(tags) => setValue((prev) => ({ ...prev, tags }))}
-          placeholder="Add a tag and press Enter"
+          onChange={(tags) => setValue((v) => ({ ...v, tags }))}
+          placeholder="Add tags…"
         />
       </div>
 
