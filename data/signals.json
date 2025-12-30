@@ -1,0 +1,58 @@
+[
+  {
+    "id": "xghdrhxks7",
+    "url": "https://www.amazon.com/dp/B0FB94HQV3/ref=sspa_dk_detail_3?pd_rd_i=B0FB94HQV3&pd_rd_w=wtJun&content-id=amzn1.sym.386c274b-4bfe-4421-9052-a1a56db557ab&pf_rd_p=386c274b-4bfe-4421-9052-a1a56db557ab&pf_rd_r=E86SDNRXYFJ83G2ZC339&pd_rd_wg=1y8tJ&pd_rd_r=16f0ab64-861c-460a-8b40-8b5156d83fb5&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM&th=1",
+    "title": "multi device charger",
+    "notes": "",
+    "tags": [],
+    "status": "inbox",
+    "createdAt": "2025-12-30T05:16:46.897Z",
+    "updatedAt": "2025-12-30T05:16:46.897Z"
+  },
+  {
+    "id": "im97xzu0b1",
+    "url": "https://www.amazon.com/dp/B0G4TMY3GR/ref=sspa_dk_detail_right_aax_0?sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfcmlnaHRfc2hhcmVk&th=1",
+    "title": "anker wireless charger",
+    "notes": "",
+    "tags": [],
+    "status": "inbox",
+    "createdAt": "2025-12-30T05:05:14.539Z",
+    "updatedAt": "2025-12-30T05:05:14.539Z"
+  },
+  {
+    "id": "99m68oruxl",
+    "url": "https://www.amazon.com/Belkin-Compatible-Wireless-Charging-Convertible/dp/B0FBQZ5CYD/ref=sr_1_14?crid=2X05EFW8AEFH3&dib=eyJ2IjoiMSJ9.90gsTbjYjDBRvuiazNo8aVYRj2ZeIjNIvm1yJqqZrE58L8pvl_i4gTMRGWEhtecsLjpTK2FOLWakQyPGdIDyXitGE5YIsRxk4N1-YLlZdAg1gTr0H_O8LCKAjHBV6XVD0yIj9MU8G0xBbfLEalrETF8h4FDvRZFMtByUlgBtbxme-Rgb4rMY61oj9Eyta_XlcY0QbGIwFJfhlGtRoYdmbYKw2AvmsAODhQ9G3KBJ90s.kQwoGGjFR4YpCJTeDA-sdXdIlYT-TLmXclSy1awdhZE&dib_tag=se&keywords=belkin%2B2%2Bin%2B1%2Bwireless%2Bcharging%2Bstation&qid=1766897546&sprefix=belkin%2B2%2Bin%2B1%2Bwireless%2Bcharging%2Bstatio%2Caps%2C199&sr=8-14&th=1",
+    "title": "Belkin Wireless Charger",
+    "notes": "",
+    "tags": [],
+    "status": "inbox",
+    "createdAt": "2025-12-30T04:57:58.254Z",
+    "updatedAt": "2025-12-30T04:57:58.254Z"
+  },
+  {
+    "id": "94c0x02kmg",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API",
+    "title": "Fetch API reference",
+    "notes": "Great refresher on request/response patterns and streaming bodies.",
+    "tags": [
+      "research",
+      "api"
+    ],
+    "status": "inbox",
+    "createdAt": "2025-12-27T04:57:51.408Z",
+    "updatedAt": "2025-12-28T04:57:51.408Z"
+  },
+  {
+    "id": "94c05n9fxf",
+    "url": "https://stripe.com/blog/checkout-ux",
+    "title": "Checkout UX patterns",
+    "notes": "Potential ideas for reducing friction in the onboarding flow.",
+    "tags": [
+      "product",
+      "ux"
+    ],
+    "status": "reading",
+    "createdAt": "2025-12-23T04:57:51.408Z",
+    "updatedAt": "2025-12-29T04:57:51.408Z"
+  }
+]
