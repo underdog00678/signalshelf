@@ -5,7 +5,7 @@ import type { MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { formatDate, hostnameFromUrl } from "../../lib/utils";
-import { update } from "../../lib/clientStore";
+import { togglePinned, update } from "../../lib/clientStore";
 
 type SignalStatus = "inbox" | "reading" | "done";
 
@@ -18,6 +18,7 @@ type Signal = {
   status: SignalStatus;
   createdAt: string;
   updatedAt: string;
+  pinned?: boolean;
 };
 
 type SignalCardProps = {
@@ -34,6 +35,7 @@ const statusOptions: { label: string; value: SignalStatus }[] = [
 export default function SignalCard({ signal, onStatusChanged }: SignalCardProps) {
   const router = useRouter();
   const [status, setStatus] = useState<SignalStatus>(signal.status);
+  const isPinned = Boolean(signal.pinned);
 
   useEffect(() => {
     setStatus(signal.status);
@@ -62,7 +64,9 @@ export default function SignalCard({ signal, onStatusChanged }: SignalCardProps)
 
   return (
     <div
-      className="cursor-pointer rounded-xl border border-neutral-800 bg-neutral-950 p-5 transition hover:bg-neutral-900"
+      className={`cursor-pointer rounded-xl border bg-neutral-950 p-5 transition hover:bg-neutral-900 ${
+        isPinned ? "border-neutral-600/80" : "border-neutral-800"
+      }`}
       onClick={() => router.push(`/app/inbox/${encodeURIComponent(signal.id)}`)}
       role="button"
       tabIndex={0}
@@ -84,6 +88,25 @@ export default function SignalCard({ signal, onStatusChanged }: SignalCardProps)
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
+            <button
+              type="button"
+              className={
+                isPinned
+                  ? "rounded-full border border-neutral-700 bg-neutral-900/70 px-2 py-1 text-xs text-neutral-100"
+                  : "rounded-full border border-neutral-800 bg-neutral-950 px-2 py-1 text-xs text-neutral-400 transition hover:text-neutral-200"
+              }
+              onClick={(event) => {
+                event.stopPropagation();
+                const updated = togglePinned(signal.id);
+                if (updated) {
+                  onStatusChanged?.();
+                }
+              }}
+              aria-pressed={isPinned}
+              aria-label={isPinned ? "Unpin signal" : "Pin signal"}
+            >
+              📌
+            </button>
             <p className="text-xs text-neutral-500">
               {formatDate(signal.createdAt)}
             </p>

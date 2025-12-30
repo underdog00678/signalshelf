@@ -9,6 +9,7 @@ export type Signal = {
   status: SignalStatus;
   createdAt: string;
   updatedAt: string;
+  pinned?: boolean;
 };
 
 const KEY = "signalshelf.signals.v1";
@@ -77,6 +78,7 @@ const buildSeedSignals = (): Signal[] => {
       notes: "Great refresher on request/response patterns and streaming bodies.",
       tags: ["research", "api"],
       status: "inbox",
+      pinned: false,
       createdAt: new Date(now - 1000 * 60 * 60 * 24 * 3).toISOString(),
       updatedAt: new Date(now - 1000 * 60 * 60 * 24 * 2).toISOString(),
     },
@@ -87,6 +89,7 @@ const buildSeedSignals = (): Signal[] => {
       notes: "Potential ideas for reducing friction in the onboarding flow.",
       tags: ["product", "ux"],
       status: "reading",
+      pinned: false,
       createdAt: new Date(now - 1000 * 60 * 60 * 24 * 7).toISOString(),
       updatedAt: new Date(now - 1000 * 60 * 60 * 24 * 1).toISOString(),
     },
@@ -118,6 +121,11 @@ export function getAll(): Signal[] {
   initIfEmpty();
   const items = [...safeRead()];
   items.sort((a, b) => {
+    const aPinned = a.pinned ? 1 : 0;
+    const bPinned = b.pinned ? 1 : 0;
+    if (aPinned !== bPinned) {
+      return bPinned - aPinned;
+    }
     const aTime = new Date(a.createdAt).getTime();
     const bTime = new Date(b.createdAt).getTime();
     return bTime - aTime;
@@ -149,6 +157,7 @@ export function create(input: {
       notes: input.notes ?? "",
       tags: normalizeTags(Array.isArray(input.tags) ? input.tags : []),
       status: input.status ?? "inbox",
+      pinned: false,
       createdAt: nowIso,
       updatedAt: nowIso,
     };
@@ -162,6 +171,7 @@ export function create(input: {
     notes: input.notes ?? "",
     tags: normalizeTags(Array.isArray(input.tags) ? input.tags : []),
     status: input.status ?? "inbox",
+    pinned: false,
     createdAt: nowIso,
     updatedAt: nowIso,
   };
@@ -194,6 +204,29 @@ export function update(
     ...existing,
     ...patch,
     tags: nextTags,
+    updatedAt: new Date().toISOString(),
+  };
+
+  signals[index] = updated;
+  safeWrite(signals);
+  return updated;
+}
+
+export function togglePinned(id: string): Signal | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  initIfEmpty();
+  const signals = safeRead();
+  const index = signals.findIndex((signal) => signal.id === id);
+  if (index === -1) {
+    return null;
+  }
+
+  const existing = signals[index];
+  const updated: Signal = {
+    ...existing,
+    pinned: !existing.pinned,
     updatedAt: new Date().toISOString(),
   };
 

@@ -18,6 +18,7 @@ type Signal = {
   status: SignalStatus;
   createdAt: string;
   updatedAt: string;
+  pinned?: boolean;
 };
 
 type StatusFilter = "all" | SignalStatus;
