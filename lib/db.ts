@@ -18,7 +18,7 @@ export type Signal = {
 
 const dataPath = path.join(process.cwd(), "data", "signals.json");
 
-let writeLock: Promise<unknown> = Promise.resolve();
+let writeLock: Promise<void> = Promise.resolve();
 
 const normalizeTags = (tags: string[]): string[] => {
   const seen = new Set<string>();
@@ -173,14 +173,22 @@ export async function createSignal(input: {
   tags?: string[];
   status?: SignalStatus;
 }): Promise<Signal> {
-  return await (writeLock = writeLock.then(async () => {
+  let release!: () => void;
+  const next = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const prev = writeLock;
+  writeLock = prev.then(() => next);
+
+  await prev;
+  try {
     let signals = await readRawSignals();
     if (signals.length === 0) {
       signals = buildSeedSignals();
     }
 
     const nowIso = new Date().toISOString();
-    const signal: Signal = {
+    const created: Signal = {
       id: makeId(),
       url: input.url,
       title: input.title,
@@ -191,10 +199,12 @@ export async function createSignal(input: {
       updatedAt: nowIso,
     };
 
-    signals.unshift(signal);
+    signals.unshift(created);
     await writeSignals(signals);
-    return signal;
-  }));
+    return created;
+  } finally {
+    release();
+  }
 }
 
 export async function updateSignal(
