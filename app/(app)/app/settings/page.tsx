@@ -1,8 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { create, getAll, initIfEmpty, SignalStatus } from "../../../../lib/clientStore";
+import {
+  create,
+  getAll,
+  initIfEmpty,
+  resetStore,
+  SignalStatus,
+} from "../../../../lib/clientStore";
 
 type ImportProgress = {
   done: number;
@@ -11,6 +18,7 @@ type ImportProgress = {
 };
 
 export default function Page() {
+  const router = useRouter();
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [importText, setImportText] = useState("");
@@ -166,6 +174,43 @@ export default function Page() {
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-neutral-100">Settings</h1>
         <p className="text-neutral-400">Export and import your signals.</p>
+      </div>
+
+      <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-6">
+        <div className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-neutral-100">
+              Demo controls
+            </h2>
+            <p className="text-sm text-neutral-400">
+              SignalShelf uses local storage for demo reliability on Vercel.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              className="w-fit rounded-lg bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-neutral-200"
+              onClick={() => {
+                resetStore();
+                window.location.href = "/app/inbox";
+              }}
+            >
+              Reset demo
+            </button>
+            <button
+              type="button"
+              className="w-fit rounded-lg bg-white px-4 py-2 text-sm font-semibold text-black transition hover:bg-neutral-200"
+              onClick={() => {
+                resetStore();
+                initIfEmpty();
+                router.push("/app/inbox");
+                router.refresh();
+              }}
+            >
+              Reseed demo
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-6">

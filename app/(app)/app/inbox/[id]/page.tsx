@@ -117,6 +117,20 @@ export default function Page() {
     }
   }, [id]);
 
+  useEffect(() => {
+    const handleEscape = () => {
+      setIsEditing((prev) => (prev ? false : prev));
+    };
+
+    window.addEventListener("signalshelf:escape", handleEscape as EventListener);
+    return () => {
+      window.removeEventListener(
+        "signalshelf:escape",
+        handleEscape as EventListener
+      );
+    };
+  }, []);
+
   const handleDelete = async () => {
     if (!item) {
       return;

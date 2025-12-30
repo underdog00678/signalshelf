@@ -104,6 +104,13 @@ export function initIfEmpty(): void {
   safeWrite(buildSeedSignals());
 }
 
+export function resetStore(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.removeItem(KEY);
+}
+
 export function getAll(): Signal[] {
   if (typeof window === "undefined") {
     return [];

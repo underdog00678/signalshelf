@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -32,6 +32,7 @@ const statusFilters: { label: string; value: StatusFilter }[] = [
 export default function InboxClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const searchRef = useRef<HTMLInputElement | null>(null);
   const [items, setItems] = useState<Signal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,7 +96,7 @@ export default function InboxClient() {
     });
   }, [items, q, statusFilter, tagParam]);
 
-  const handleClearTag = () => {
+  const handleClearTag = useCallback(() => {
     if (!tagParam) {
       return;
     }
@@ -103,7 +104,39 @@ export default function InboxClient() {
     nextParams.delete("tag");
     const nextQuery = nextParams.toString();
     router.push(nextQuery ? `/app/inbox?${nextQuery}` : "/app/inbox");
-  };
+  }, [router, searchParams, tagParam]);
+
+  useEffect(() => {
+    const handleFocusSearch = () => {
+      searchRef.current?.focus();
+    };
+    const handleEscape = () => {
+      if (tagParam) {
+        handleClearTag();
+        return;
+      }
+      if (q) {
+        setQ("");
+      }
+    };
+
+    window.addEventListener(
+      "signalshelf:focus-search",
+      handleFocusSearch as EventListener
+    );
+    window.addEventListener("signalshelf:escape", handleEscape as EventListener);
+
+    return () => {
+      window.removeEventListener(
+        "signalshelf:focus-search",
+        handleFocusSearch as EventListener
+      );
+      window.removeEventListener(
+        "signalshelf:escape",
+        handleEscape as EventListener
+      );
+    };
+  }, [handleClearTag, q, tagParam]);
 
   return (
     <div className="space-y-6">
@@ -124,6 +157,7 @@ export default function InboxClient() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <input
+          ref={searchRef}
           value={q}
           onChange={(event) => setQ(event.target.value)}
           placeholder="Search signals"
