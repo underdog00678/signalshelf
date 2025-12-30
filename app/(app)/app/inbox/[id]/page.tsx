@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -41,7 +41,7 @@ export default function Page({ params }: PageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [apiErrors, setApiErrors] = useState<Record<string, string>>();
 
-  const loadSignal = useCallback(() => {
+  useEffect(() => {
     setLoading(true);
     setError(null);
     setNotFound(false);
@@ -57,10 +57,6 @@ export default function Page({ params }: PageProps) {
       setLoading(false);
     }
   }, [id]);
-
-  useEffect(() => {
-    loadSignal();
-  }, [loadSignal]);
 
   const handleDelete = async () => {
     if (!item) {
@@ -160,6 +156,9 @@ export default function Page({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
+      {process.env.NODE_ENV !== "production" && (
+        <div className="text-xs text-neutral-500">debug: loaded {id}</div>
+      )}
       <div className="flex flex-col gap-2">
         <Link
           href="/app/inbox"
