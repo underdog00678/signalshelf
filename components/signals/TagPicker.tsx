@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-type TagPickerProps = {
+type Props = {
   value: string[];
-  onChange: (tags: string[]) => void;
+  onChange: (next: string[]) => void;
   placeholder?: string;
 };
 
@@ -12,7 +12,7 @@ export default function TagPicker({
   value,
   onChange,
   placeholder,
-}: TagPickerProps) {
+}: Props) {
   const [inputValue, setInputValue] = useState("");
 
   const normalizeTag = (tag: string) => tag.trim().toLowerCase();

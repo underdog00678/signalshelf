@@ -37,7 +37,14 @@ export default function Page() {
 
     try {
       initIfEmpty();
-      const created = create(value);
+      console.log("[New create payload]", value);
+      const created = create({
+        url: value.url,
+        title: value.title,
+        notes: value.notes,
+        tags: value.tags,
+        status: value.status,
+      });
       router.push(`/app/inbox/${created.id}`);
     } catch {
       setApiErrors({ form: "Something went wrong. Please try again." });

@@ -32,12 +32,12 @@ export default function SignalForm({
   apiErrors,
 }: SignalFormProps) {
   const isEditMode = mode === "edit";
-  const [formValue, setFormValue] = useState<SignalFormValue>(initialValue);
+  const [value, setValue] = useState<SignalFormValue>(initialValue);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    setFormValue(initialValue);
+    setValue(initialValue);
     setFieldErrors({});
   }, [initialValue]);
 
@@ -50,8 +50,8 @@ export default function SignalForm({
 
   const validate = () => {
     const nextErrors: Record<string, string> = {};
-    const trimmedUrl = formValue.url.trim();
-    const trimmedTitle = formValue.title.trim();
+    const trimmedUrl = value.url.trim();
+    const trimmedTitle = value.title.trim();
 
     if (!/^https?:\/\//i.test(trimmedUrl)) {
       nextErrors.url = "URL must start with http:// or https://.";
@@ -62,11 +62,11 @@ export default function SignalForm({
     }
 
     setFieldErrors(nextErrors);
-    return { nextErrors, trimmedUrl, trimmedTitle };
+    return nextErrors;
   };
 
   const updateUrl = (value: string) => {
-    setFormValue((prev) => ({ ...prev, url: value }));
+    setValue((prev) => ({ ...prev, url: value }));
     if (fieldErrors.url && /^https?:\/\//i.test(value.trim())) {
       setFieldErrors((prev) => {
         const { url, ...rest } = prev;
@@ -76,7 +76,7 @@ export default function SignalForm({
   };
 
   const updateTitle = (value: string) => {
-    setFormValue((prev) => ({ ...prev, title: value }));
+    setValue((prev) => ({ ...prev, title: value }));
     if (fieldErrors.title) {
       const length = value.trim().length;
       if (length >= 2 && length <= 120) {
@@ -90,7 +90,7 @@ export default function SignalForm({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const { nextErrors, trimmedUrl, trimmedTitle } = validate();
+    const nextErrors = validate();
 
     if (Object.keys(nextErrors).length > 0) {
       return;
@@ -98,11 +98,8 @@ export default function SignalForm({
 
     setIsSubmitting(true);
     try {
-      await onSubmit({
-        ...formValue,
-        url: trimmedUrl,
-        title: trimmedTitle,
-      });
+      console.log("[SignalForm submit]", value);
+      await onSubmit(value);
     } finally {
       setIsSubmitting(false);
     }
@@ -131,7 +128,7 @@ export default function SignalForm({
         </label>
         <input
           id="signal-url"
-          value={formValue.url}
+          value={value.url}
           onChange={(event) => updateUrl(event.target.value)}
           className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-neutral-100"
           placeholder="https://"
@@ -148,7 +145,7 @@ export default function SignalForm({
         </label>
         <input
           id="signal-title"
-          value={formValue.title}
+          value={value.title}
           onChange={(event) => updateTitle(event.target.value)}
           className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-neutral-100"
           placeholder="Short descriptive title"
@@ -165,9 +162,9 @@ export default function SignalForm({
         </label>
         <textarea
           id="signal-notes"
-          value={formValue.notes}
+          value={value.notes}
           onChange={(event) =>
-            setFormValue((prev) => ({ ...prev, notes: event.target.value }))
+            setValue((prev) => ({ ...prev, notes: event.target.value }))
           }
           className="min-h-[120px] w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-neutral-100"
           placeholder="Add context, highlights, or next steps"
@@ -177,8 +174,8 @@ export default function SignalForm({
       <div className="space-y-2">
         <label className="text-sm text-neutral-300">Tags</label>
         <TagPicker
-          value={formValue.tags}
-          onChange={(tags) => setFormValue((prev) => ({ ...prev, tags }))}
+          value={value.tags}
+          onChange={(tags) => setValue((prev) => ({ ...prev, tags }))}
           placeholder="Add a tag and press Enter"
         />
       </div>
@@ -189,9 +186,9 @@ export default function SignalForm({
         </label>
         <select
           id="signal-status"
-          value={formValue.status}
+          value={value.status}
           onChange={(event) =>
-            setFormValue((prev) => ({
+            setValue((prev) => ({
               ...prev,
               status: event.target.value as SignalStatus,
             }))

@@ -148,6 +148,12 @@ export function create(input: {
   tags?: string[];
   status?: SignalStatus;
 }): Signal {
+  const tags = (input.tags ?? [])
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+  const dedupedTags = Array.from(new Set(tags)).slice(0, 12);
+  console.log("[clientStore.create]", { input, dedupedTags });
+
   if (typeof window === "undefined") {
     const nowIso = new Date().toISOString();
     return {
@@ -155,7 +161,7 @@ export function create(input: {
       url: input.url,
       title: input.title,
       notes: input.notes ?? "",
-      tags: normalizeTags(Array.isArray(input.tags) ? input.tags : []),
+      tags: dedupedTags,
       status: input.status ?? "inbox",
       pinned: false,
       createdAt: nowIso,
@@ -169,7 +175,7 @@ export function create(input: {
     url: input.url,
     title: input.title,
     notes: input.notes ?? "",
-    tags: normalizeTags(Array.isArray(input.tags) ? input.tags : []),
+    tags: dedupedTags,
     status: input.status ?? "inbox",
     pinned: false,
     createdAt: nowIso,
