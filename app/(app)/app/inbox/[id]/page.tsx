@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import SignalForm from "../../../../../components/signals/SignalForm";
 import { formatDate, hostnameFromUrl } from "../../../../../lib/utils";
+import { getById, initIfEmpty, remove, update } from "../../../../../lib/clientStore";
 
 type SignalStatus = "inbox" | "reading" | "done";
 
@@ -28,9 +29,7 @@ type SignalFormValue = {
   status: SignalStatus;
 };
 
-type PageProps = {
-  params: { id: string };
-};
+type PageProps = { params: { id: string } };
 
 export default function Page({ params }: PageProps) {
   const id = decodeURIComponent(params.id);
@@ -42,23 +41,20 @@ export default function Page({ params }: PageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [apiErrors, setApiErrors] = useState<Record<string, string>>();
 
-  const loadSignal = useCallback(async () => {
+  const loadSignal = useCallback(() => {
     setLoading(true);
     setError(null);
     setNotFound(false);
 
     try {
-      const response = await fetch(`/api/signals/${id}`);
-      if (response.status === 404) {
+      initIfEmpty();
+      const found = getById(id);
+      if (!found) {
         setNotFound(true);
         setItem(null);
         return;
       }
-      if (!response.ok) {
-        throw new Error("Failed to load signal.");
-      }
-      const data = (await response.json()) as { item?: Signal };
-      setItem(data.item ?? null);
+      setItem(found);
     } catch {
       setError("Unable to load the signal.");
     } finally {
@@ -79,11 +75,8 @@ export default function Page({ params }: PageProps) {
       return;
     }
 
-    const response = await fetch(`/api/signals/${item.id}`, {
-      method: "DELETE",
-    });
-
-    if (response.ok) {
+    const deleted = remove(item.id);
+    if (deleted) {
       router.push("/app/inbox");
     } else {
       setError("Unable to delete the signal.");
@@ -97,24 +90,13 @@ export default function Page({ params }: PageProps) {
 
     setApiErrors(undefined);
 
-    const response = await fetch(`/api/signals/${item.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(value),
-    });
-
-    if (response.status === 400) {
-      const data = (await response.json()) as { errors?: Record<string, string> };
-      setApiErrors(data.errors ?? { form: "Please review the form." });
-      return;
-    }
-
-    if (!response.ok) {
+    const updated = update(item.id, value);
+    if (!updated) {
       setError("Unable to save changes.");
       return;
     }
 
-    await loadSignal();
+    loadSignal();
     setIsEditing(false);
   };
 

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { initIfEmpty, listTags } from "../../../../lib/clientStore";
+
 type TagItem = { name: string; count: number };
 
 export default function Page() {
@@ -17,12 +19,8 @@ export default function Page() {
       setError(null);
 
       try {
-        const response = await fetch("/api/tags");
-        if (!response.ok) {
-          throw new Error("Failed to load tags.");
-        }
-        const data = (await response.json()) as { tags?: TagItem[] };
-        setTags(Array.isArray(data.tags) ? data.tags : []);
+        initIfEmpty();
+        setTags(listTags());
       } catch {
         setError("Unable to load tags.");
       } finally {

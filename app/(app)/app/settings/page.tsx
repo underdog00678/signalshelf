@@ -2,18 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-type SignalStatus = "inbox" | "reading" | "done";
-
-type Signal = {
-  id: string;
-  url: string;
-  title: string;
-  notes: string;
-  tags: string[];
-  status: SignalStatus;
-  createdAt: string;
-  updatedAt: string;
-};
+import { create, getAll, initIfEmpty, SignalStatus } from "../../../../lib/clientStore";
 
 type ImportProgress = {
   done: number;
@@ -36,14 +25,10 @@ export default function Page() {
     setExportError(null);
 
     try {
-      const response = await fetch("/api/signals");
-      if (!response.ok) {
-        throw new Error("Failed to export signals.");
-      }
-      const data = (await response.json()) as { items?: Signal[] };
+      initIfEmpty();
       const payload = {
         exportedAt: new Date().toISOString(),
-        items: Array.isArray(data.items) ? data.items : [],
+        items: getAll(),
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], {
         type: "application/json",
@@ -91,7 +76,6 @@ export default function Page() {
         }
         const candidate = entry as Record<string, unknown>;
         if (
-          typeof candidate.id !== "string" ||
           typeof candidate.url !== "string" ||
           typeof candidate.title !== "string"
         ) {
@@ -150,16 +134,11 @@ export default function Page() {
     let done = 0;
     let errors = 0;
 
+    initIfEmpty();
+
     for (const payload of payloads) {
       try {
-        const response = await fetch("/api/signals", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!response.ok) {
-          errors += 1;
-        }
+        create(payload);
       } catch {
         errors += 1;
       } finally {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import SignalForm from "../../../../components/signals/SignalForm";
+import { create, initIfEmpty } from "../../../../lib/clientStore";
 
 type SignalStatus = "inbox" | "reading" | "done";
 
@@ -34,29 +35,13 @@ export default function Page() {
   const handleSubmit = async (value: SignalFormValue) => {
     setApiErrors(undefined);
 
-    const response = await fetch("/api/signals", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(value),
-    });
-
-    if (response.status === 201) {
-      const data = (await response.json()) as { item?: { id?: string } };
-      if (data.item?.id) {
-        router.push(`/app/inbox/${data.item.id}`);
-        return;
-      }
-      router.push("/app/inbox");
-      return;
+    try {
+      initIfEmpty();
+      const created = create(value);
+      router.push(`/app/inbox/${created.id}`);
+    } catch {
+      setApiErrors({ form: "Something went wrong. Please try again." });
     }
-
-    if (response.status === 400) {
-      const data = (await response.json()) as { errors?: Record<string, string> };
-      setApiErrors(data.errors ?? { form: "Please review the form." });
-      return;
-    }
-
-    setApiErrors({ form: "Something went wrong. Please try again." });
   };
 
   return (

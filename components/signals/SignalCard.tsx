@@ -5,6 +5,7 @@ import type { MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { formatDate, hostnameFromUrl } from "../../lib/utils";
+import { update } from "../../lib/clientStore";
 
 type SignalStatus = "inbox" | "reading" | "done";
 
@@ -33,42 +34,30 @@ const statusOptions: { label: string; value: SignalStatus }[] = [
 export default function SignalCard({ signal, onStatusChanged }: SignalCardProps) {
   const router = useRouter();
   const [status, setStatus] = useState<SignalStatus>(signal.status);
-  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     setStatus(signal.status);
   }, [signal.status]);
 
-  const handleStatusChange = async (
+  const handleStatusChange = (
     nextStatus: SignalStatus,
     event: MouseEvent<HTMLButtonElement>
   ) => {
     event.stopPropagation();
-    if (nextStatus === status || isUpdating) {
+    if (nextStatus === status) {
       return;
     }
 
     const previous = status;
     setStatus(nextStatus);
-    setIsUpdating(true);
 
-    try {
-      const response = await fetch(`/api/signals/${signal.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: nextStatus }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update status.");
-      }
-
-      onStatusChanged?.();
-    } catch {
+    const updated = update(signal.id, { status: nextStatus });
+    if (!updated) {
       setStatus(previous);
-    } finally {
-      setIsUpdating(false);
+      return;
     }
+
+    onStatusChanged?.();
   };
 
   return (
@@ -112,7 +101,6 @@ export default function SignalCard({ signal, onStatusChanged }: SignalCardProps)
                     }
                     onClick={(event) => handleStatusChange(option.value, event)}
                     aria-pressed={isActive}
-                    disabled={isUpdating}
                   >
                     {option.label}
                   </button>

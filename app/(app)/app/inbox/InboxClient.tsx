@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import SignalCard from "../../../../components/signals/SignalCard";
+import { getAll, initIfEmpty } from "../../../../lib/clientStore";
 
 type SignalStatus = "inbox" | "reading" | "done";
 
@@ -42,17 +43,12 @@ export default function InboxClient() {
     return value ? value.trim() : "";
   }, [searchParams]);
 
-  const loadSignals = useCallback(async () => {
+  const loadSignals = useCallback(() => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/signals");
-      if (!response.ok) {
-        throw new Error("Failed to load signals.");
-      }
-      const data = (await response.json()) as { items?: Signal[] };
-      setItems(Array.isArray(data.items) ? data.items : []);
+      setItems(getAll());
     } catch {
       setError("Unable to load signals.");
     } finally {
@@ -61,6 +57,7 @@ export default function InboxClient() {
   }, []);
 
   useEffect(() => {
+    initIfEmpty();
     loadSignals();
   }, [loadSignals]);
 
