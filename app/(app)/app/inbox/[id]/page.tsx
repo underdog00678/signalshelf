@@ -31,6 +31,56 @@ type SignalFormValue = {
 
 type PageProps = { params: { id: string } };
 
+const KEY = "signalshelf.signals.v1";
+
+function readAll(): Signal[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+  try {
+    const raw = window.localStorage.getItem(KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeAll(items: Signal[]) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(KEY, JSON.stringify(items));
+}
+
+function getLocalById(id: string): Signal | null {
+  const items = readAll();
+  return items.find((signal) => signal && signal.id === id) ?? null;
+}
+
+function updateLocal(id: string, patch: Partial<Signal>): Signal | null {
+  const items = readAll();
+  const index = items.findIndex((signal) => signal.id === id);
+  if (index === -1) {
+    return null;
+  }
+  const now = new Date().toISOString();
+  const next: Signal = { ...items[index], ...patch, id, updatedAt: now };
+  items[index] = next;
+  writeAll(items);
+  return next;
+}
+
+function removeLocal(id: string): boolean {
+  const items = readAll();
+  const next = items.filter((signal) => signal.id !== id);
+  if (next.length === items.length) {
+    return false;
+  }
+  writeAll(next);
+  return true;
+}
+
 export default function Page({ params }: PageProps) {
   const id = decodeURIComponent(params.id);
   const router = useRouter();
@@ -48,7 +98,10 @@ export default function Page({ params }: PageProps) {
 
     try {
       initIfEmpty();
-      const found = getById(id);
+      let found = getById(id);
+      if (!found) {
+        found = getLocalById(id);
+      }
       setItem(found);
       setNotFound(!found);
     } catch {
@@ -67,7 +120,10 @@ export default function Page({ params }: PageProps) {
       return;
     }
 
-    const deleted = remove(id);
+    let deleted = remove(id);
+    if (!deleted) {
+      deleted = removeLocal(id);
+    }
     if (deleted) {
       router.push("/app/inbox");
       return;
@@ -82,13 +138,16 @@ export default function Page({ params }: PageProps) {
 
     setApiErrors(undefined);
 
-    const updated = update(id, value);
+    let updated = update(id, value);
+    if (!updated) {
+      updated = updateLocal(id, value as any);
+    }
     if (!updated) {
       setError("Unable to save changes.");
       return;
     }
 
-    setItem(getById(id));
+    setItem(getLocalById(id));
     setIsEditing(false);
   };
 
