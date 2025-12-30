@@ -11,18 +11,7 @@ export type Signal = {
   updatedAt: string;
 };
 
-const STORAGE_KEY = "signalshelf.signals.v1";
-
-const getStorage = (): Storage | null => {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-};
+const KEY = "signalshelf.signals.v1";
 
 const createId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -50,18 +39,15 @@ const normalizeTags = (tags: string[]): string[] => {
   return normalized;
 };
 
-function read(): Signal[] {
-  const storage = getStorage();
-  if (!storage) {
+function safeRead(): Signal[] {
+  if (typeof window === "undefined") {
     return [];
   }
-
-  const raw = storage.getItem(STORAGE_KEY);
-  if (!raw) {
-    return [];
-  }
-
   try {
+    const raw = window.localStorage.getItem(KEY);
+    if (!raw) {
+      return [];
+    }
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? (parsed as Signal[]) : [];
   } catch {
@@ -69,14 +55,12 @@ function read(): Signal[] {
   }
 }
 
-function write(signals: Signal[]): void {
-  const storage = getStorage();
-  if (!storage) {
+function safeWrite(items: Signal[]): void {
+  if (typeof window === "undefined") {
     return;
   }
-
   try {
-    storage.setItem(STORAGE_KEY, JSON.stringify(signals));
+    window.localStorage.setItem(KEY, JSON.stringify(items));
   } catch {
     return;
   }
@@ -110,20 +94,22 @@ const buildSeedSignals = (): Signal[] => {
 };
 
 export function initIfEmpty(): void {
-  const storage = getStorage();
-  if (!storage) {
+  if (typeof window === "undefined") {
     return;
   }
-
-  const current = read();
-  if (current.length === 0) {
-    write(buildSeedSignals());
+  const current = safeRead();
+  if (current.length > 0) {
+    return;
   }
+  safeWrite(buildSeedSignals());
 }
 
 export function getAll(): Signal[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
   initIfEmpty();
-  const items = [...read()];
+  const items = [...safeRead()];
   items.sort((a, b) => {
     const aTime = new Date(a.createdAt).getTime();
     const bTime = new Date(b.createdAt).getTime();
@@ -133,8 +119,11 @@ export function getAll(): Signal[] {
 }
 
 export function getById(id: string): Signal | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
   initIfEmpty();
-  return read().find((signal) => signal.id === id) ?? null;
+  return safeRead().find((signal) => signal.id === id) ?? null;
 }
 
 export function create(input: {
@@ -144,6 +133,20 @@ export function create(input: {
   tags?: string[];
   status?: SignalStatus;
 }): Signal {
+  if (typeof window === "undefined") {
+    const nowIso = new Date().toISOString();
+    return {
+      id: createId(),
+      url: input.url,
+      title: input.title,
+      notes: input.notes ?? "",
+      tags: normalizeTags(Array.isArray(input.tags) ? input.tags : []),
+      status: input.status ?? "inbox",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+  }
+
   const nowIso = new Date().toISOString();
   const created: Signal = {
     id: createId(),
@@ -155,15 +158,10 @@ export function create(input: {
     createdAt: nowIso,
     updatedAt: nowIso,
   };
-
-  const storage = getStorage();
-  if (!storage) {
-    return created;
-  }
-
-  const signals = read();
+  initIfEmpty();
+  const signals = safeRead();
   signals.unshift(created);
-  write(signals);
+  safeWrite(signals);
   return created;
 }
 
@@ -171,12 +169,11 @@ export function update(
   id: string,
   patch: Partial<Omit<Signal, "id" | "createdAt">>
 ): Signal | null {
-  const storage = getStorage();
-  if (!storage) {
+  if (typeof window === "undefined") {
     return null;
   }
-
-  const signals = read();
+  initIfEmpty();
+  const signals = safeRead();
   const index = signals.findIndex((signal) => signal.id === id);
   if (index === -1) {
     return null;
@@ -194,32 +191,34 @@ export function update(
   };
 
   signals[index] = updated;
-  write(signals);
+  safeWrite(signals);
   return updated;
 }
 
 export function remove(id: string): boolean {
-  const storage = getStorage();
-  if (!storage) {
+  if (typeof window === "undefined") {
     return false;
   }
-
-  const signals = read();
+  initIfEmpty();
+  const signals = safeRead();
   const index = signals.findIndex((signal) => signal.id === id);
   if (index === -1) {
     return false;
   }
 
   signals.splice(index, 1);
-  write(signals);
+  safeWrite(signals);
   return true;
 }
 
 export function listTags(): { name: string; count: number }[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
   initIfEmpty();
   const counts = new Map<string, number>();
 
-  for (const signal of read()) {
+  for (const signal of safeRead()) {
     for (const tag of signal.tags) {
       counts.set(tag, (counts.get(tag) ?? 0) + 1);
     }
