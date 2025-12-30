@@ -179,6 +179,7 @@ export default function SignalForm({
         <TagPicker
           value={formValue.tags}
           onChange={(tags) => setFormValue((prev) => ({ ...prev, tags }))}
+          placeholder="Add a tag and press Enter"
         />
       </div>
 
